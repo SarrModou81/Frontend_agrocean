@@ -182,6 +182,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
           label: 'Entrepôts',
           icon: 'pi pi-building',
           routerLink: ['/entrepots']
+        },
+        {
+          label: 'Demandes d\'Approvisionnement',
+          icon: 'pi pi-inbox',
+          routerLink: ['/demandes-approvisionnement']
         }
       );
     }
@@ -214,6 +219,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
               routerLink: ['/commandes-achat/receptions']
             }
           ]
+        },
+        {
+          label: 'Demandes d\'Approvisionnement',
+          icon: 'pi pi-inbox',
+          routerLink: ['/demandes-approvisionnement']
         }
       );
     }

@@ -1,0 +1,229 @@
+<div class="demande-detail-container">
+  <!-- Header avec bouton retour -->
+  <div class="page-header">
+    <div class="header-left">
+      <button pButton type="button" icon="pi pi-arrow-left" label="Retour"
+              class="p-button-text" (click)="retour()"></button>
+      <h2 *ngIf="demande">Demande d'approvisionnement {{ demande.numero }}</h2>
+    </div>
+    <div class="header-actions" *ngIf="demande">
+      <!-- Actions Gestionnaire -->
+      <button *ngIf="canEnvoyer()" pButton type="button" icon="pi pi-send"
+              label="Envoyer" class="p-button-success" (click)="envoyerDemande()"></button>
+      <button *ngIf="canAnnuler()" pButton type="button" icon="pi pi-times"
+              label="Annuler" class="p-button-danger p-button-outlined" (click)="annulerDemande()"></button>
+
+      <!-- Actions Agent -->
+      <button *ngIf="canPrendrEnCharge()" pButton type="button" icon="pi pi-check"
+              label="Prendre en charge" class="p-button-primary" (click)="prendrEnCharge()"></button>
+      <button *ngIf="canTraiter()" pButton type="button" icon="pi pi-check-circle"
+              label="Traiter" class="p-button-success" (click)="ouvrirDialogTraiter()"></button>
+      <button *ngIf="canRejeter()" pButton type="button" icon="pi pi-ban"
+              label="Rejeter" class="p-button-danger p-button-outlined" (click)="ouvrirDialogRejeter()"></button>
+    </div>
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="!loading && demande" class="demande-content">
+    <!-- Informations générales -->
+    <p-card header="Informations générales" class="info-card">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Numéro</label>
+          <p class="value">{{ demande.numero }}</p>
+        </div>
+        <div class="info-item">
+          <label>Date de demande</label>
+          <p class="value">{{ formatDate(demande.date_demande) }}</p>
+        </div>
+        <div class="info-item">
+          <label>Statut</label>
+          <p class="value">
+            <p-tag [value]="getStatutLabel(demande.statut)"
+                   [severity]="getStatutSeverity(demande.statut)"></p-tag>
+          </p>
+        </div>
+        <div class="info-item">
+          <label>Priorité</label>
+          <p class="value">
+            <p-tag [value]="demande.priorite"
+                   [severity]="getPrioriteSeverity(demande.priorite)"></p-tag>
+          </p>
+        </div>
+        <div class="info-item full-width" *ngIf="isAgentApprovisionnement && demande.demandeur">
+          <label>Demandeur</label>
+          <p class="value">
+            <i class="pi pi-user"></i>
+            {{ demande.demandeur.prenom }} {{ demande.demandeur.nom }}
+            <span class="email">({{ demande.demandeur.email }})</span>
+          </p>
+        </div>
+        <div class="info-item full-width" *ngIf="isGestionnaireStock && demande.destinataire">
+          <label>Destinataire (Agent)</label>
+          <p class="value">
+            <i class="pi pi-user"></i>
+            {{ demande.destinataire.prenom }} {{ demande.destinataire.nom }}
+            <span class="email">({{ demande.destinataire.email }})</span>
+          </p>
+        </div>
+        <div class="info-item full-width" *ngIf="demande.motif">
+          <label>Motif</label>
+          <p class="value">{{ demande.motif }}</p>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Produits demandés -->
+    <p-card header="Produits demandés" class="produits-card">
+      <p-table [value]="demande.detail_demandes || []"
+               [tableStyle]="{ 'min-width': '60rem' }"
+               responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Produit</th>
+            <th>Catégorie</th>
+            <th class="text-right">Stock actuel</th>
+            <th class="text-right">Seuil minimum</th>
+            <th class="text-right">Quantité demandée</th>
+            <th>Justification</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-detail>
+          <tr>
+            <td>
+              <div class="produit-info">
+                <strong>{{ detail.produit?.nom }}</strong>
+                <small class="reference">Réf: {{ detail.produit?.reference }}</small>
+              </div>
+            </td>
+            <td>{{ detail.produit?.categorie?.nom || '-' }}</td>
+            <td class="text-right">
+              <p-tag [value]="detail.quantite_actuelle || 0"
+                     [severity]="(detail.quantite_actuelle || 0) === 0 ? 'danger' :
+                                (detail.quantite_actuelle || 0) < (detail.seuil_minimum || 0) ? 'warning' : 'success'">
+              </p-tag>
+            </td>
+            <td class="text-right">{{ detail.seuil_minimum || 0 }}</td>
+            <td class="text-right">
+              <strong class="quantite-demandee">{{ detail.quantite_demandee }}</strong>
+            </td>
+            <td>{{ detail.justification || '-' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="footer">
+          <tr>
+            <td colspan="4" class="text-right"><strong>Total quantité demandée:</strong></td>
+            <td class="text-right"><strong class="total-quantite">{{ getTotalQuantite() }}</strong></td>
+            <td></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+
+    <!-- Traitement (si traitée ou rejetée) -->
+    <p-card *ngIf="demande.date_traitement || demande.commentaire_traitement"
+            header="Informations de traitement" class="traitement-card">
+      <div class="info-grid">
+        <div class="info-item" *ngIf="demande.date_traitement">
+          <label>Date de traitement</label>
+          <p class="value">{{ formatDate(demande.date_traitement) }}</p>
+        </div>
+        <div class="info-item full-width" *ngIf="demande.commentaire_traitement">
+          <label>Commentaire</label>
+          <p class="value">{{ demande.commentaire_traitement }}</p>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Historique -->
+    <p-card header="Historique" class="historique-card">
+      <div class="timeline">
+        <div class="timeline-item">
+          <i class="pi pi-circle-fill timeline-icon"></i>
+          <div class="timeline-content">
+            <strong>Création</strong>
+            <p>{{ formatDate(demande.created_at) }}</p>
+          </div>
+        </div>
+        <div class="timeline-item" *ngIf="demande.statut !== 'Brouillon'">
+          <i class="pi pi-circle-fill timeline-icon"></i>
+          <div class="timeline-content">
+            <strong>Envoyée</strong>
+            <p *ngIf="demande.destinataire">
+              À {{ demande.destinataire.prenom }} {{ demande.destinataire.nom }}
+            </p>
+          </div>
+        </div>
+        <div class="timeline-item" *ngIf="demande.date_traitement">
+          <i class="pi pi-circle-fill timeline-icon"></i>
+          <div class="timeline-content">
+            <strong>{{ getStatutLabel(demande.statut) }}</strong>
+            <p>{{ formatDate(demande.date_traitement) }}</p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  </div>
+</div>
+
+<!-- Dialog Envoyer (Gestionnaire) -->
+<p-dialog header="Envoyer la demande" [(visible)]="showEnvoiDialog"
+          [modal]="true" [style]="{width: '450px'}">
+  <div class="dialog-content">
+    <p>Sélectionnez un agent d'approvisionnement (optionnel) :</p>
+    <p-dropdown [options]="agents" [(ngModel)]="selectedDestinataire"
+                placeholder="Sélectionner un agent"
+                [showClear]="true"
+                [style]="{'width':'100%'}">
+    </p-dropdown>
+    <small class="hint">Si aucun agent n'est sélectionné, la demande sera visible par tous les agents.</small>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Annuler"
+            class="p-button-text" (click)="showEnvoiDialog = false"></button>
+    <button pButton type="button" label="Envoyer" icon="pi pi-send"
+            class="p-button-success" (click)="confirmerEnvoi()" [loading]="loading"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Traiter (Agent) -->
+<p-dialog header="Traiter la demande" [(visible)]="showTraiterDialog"
+          [modal]="true" [style]="{width: '500px'}">
+  <div class="dialog-content">
+    <p>Commentaire (optionnel) :</p>
+    <textarea pInputTextarea [(ngModel)]="commentaireTraitement"
+              rows="4" [style]="{'width':'100%'}"
+              placeholder="Saisissez un commentaire..."></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Annuler"
+            class="p-button-text" (click)="showTraiterDialog = false"></button>
+    <button pButton type="button" label="Valider" icon="pi pi-check"
+            class="p-button-success" (click)="confirmerTraiter()" [loading]="loading"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Rejeter (Agent) -->
+<p-dialog header="Rejeter la demande" [(visible)]="showRejeterDialog"
+          [modal]="true" [style]="{width: '500px'}">
+  <div class="dialog-content">
+    <p><strong>Commentaire de rejet (obligatoire) :</strong></p>
+    <textarea pInputTextarea [(ngModel)]="commentaireRejet"
+              rows="4" [style]="{'width':'100%'}"
+              placeholder="Saisissez la raison du rejet..."></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Annuler"
+            class="p-button-text" (click)="showRejeterDialog = false"></button>
+    <button pButton type="button" label="Rejeter" icon="pi pi-ban"
+            class="p-button-danger" (click)="confirmerRejeter()" [loading]="loading"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Confirmation dialog (géré par ConfirmationService) -->
+<p-confirmDialog></p-confirmDialog>

@@ -74,6 +74,11 @@ const routes: Routes = [
         data: { roles: ['Administrateur', 'GestionnaireStock'] }
       },
       {
+        path: 'demandes-approvisionnement',
+        loadChildren: () => import('./features/demandes-approvisionnement/demandes-approvisionnement.module').then(m => m.DemandesApprovisionnementModule),
+        data: { roles: ['Administrateur', 'GestionnaireStock', 'AgentApprovisionnement'] }
+      },
+      {
         path: 'livraisons',
         loadChildren: () => import('./features/livraisons/livraisons.module').then(m => m.LivraisonsModule),
         data: { roles: ['Administrateur', 'Commercial'] }
