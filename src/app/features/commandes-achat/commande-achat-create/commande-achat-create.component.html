@@ -11,15 +11,33 @@
       ></button>
     </div>
 
-    <!-- Message si commande basée sur demande d'appro -->
-    <p-message
-      *ngIf="fromDemandeAppro"
-      severity="info"
-      text="Cette commande est basée sur la demande d'approvisionnement {{ demandeApproNumero }}"
-      [style]="{'margin-bottom': '1.5rem'}"
-    ></p-message>
-
     <form [formGroup]="commandeForm" (ngSubmit)="onSubmit()">
+      <!-- Sélection demande d'approvisionnement -->
+      <div class="section demande-appro-section">
+        <h3>Demande d'Approvisionnement</h3>
+        <div class="field">
+          <label for="demande_appro">Sélectionner une demande d'approvisionnement (optionnel)</label>
+          <p-dropdown
+            id="demande_appro"
+            [options]="demandesAppro"
+            [(ngModel)]="selectedDemandeId"
+            [ngModelOptions]="{standalone: true}"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Choisir une demande d'approvisionnement..."
+            [filter]="true"
+            [showClear]="true"
+            (onChange)="onDemandeApproChange($event)"
+            [style]="{'width':'100%'}"
+          >
+          </p-dropdown>
+          <small class="hint">
+            <i class="pi pi-info-circle"></i>
+            Sélectionnez une demande pour charger automatiquement les produits demandés
+          </small>
+        </div>
+      </div>
+
       <!-- Informations générales -->
       <div class="section">
         <h3>Informations Générales</h3>

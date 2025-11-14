@@ -17,9 +17,8 @@ export class CommandeAchatCreateComponent implements OnInit {
   loading = false;
   fournisseurs: Fournisseur[] = [];
   produits: Produit[] = [];
-  fromDemandeAppro = false;
-  demandeApproId: number | null = null;
-  demandeApproNumero = '';
+  demandesAppro: any[] = [];
+  selectedDemandeId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -29,62 +28,85 @@ export class CommandeAchatCreateComponent implements OnInit {
     private produitService: ProduitService,
     private messageService: MessageService,
     private demandeApproService: DemandeApprovisionnementService
-  ) {
-    // Récupérer les données de navigation
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras?.state;
-
-    if (state && state['fromDemandeAppro']) {
-      this.fromDemandeAppro = true;
-      this.demandeApproId = state['demandeId'];
-      this.demandeApproNumero = state['demandeNumero'];
-    }
-  }
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadFournisseurs();
     this.loadProduits();
-
-    // Si on vient d'une demande d'approvisionnement, pré-remplir les produits
-    if (this.fromDemandeAppro) {
-      this.preRemplirDepuisDemandeAppro();
-    }
+    this.loadDemandesAppro();
   }
 
-  preRemplirDepuisDemandeAppro(): void {
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras?.state;
+  loadDemandesAppro(): void {
+    // Charger les demandes en cours ou envoyées pour les afficher dans le select
+    const params = { statut: 'EnCours,Envoyée' };
 
-    if (state && state['produits']) {
-      const produits = state['produits'];
+    this.demandeApproService.getAll(params).subscribe({
+      next: (response) => {
+        this.demandesAppro = response.data.map((demande: any) => ({
+          label: `${demande.numero} - ${demande.demandeur?.prenom || ''} ${demande.demandeur?.nom || ''} (${demande.detail_demandes?.length || 0} produits)`,
+          value: demande.id,
+          data: demande
+        }));
+      }
+    });
+  }
 
-      // Attendre que les produits soient chargés
-      setTimeout(() => {
+  onDemandeApproChange(event: any): void {
+    const demandeId = event.value;
+    if (!demandeId) {
+      this.selectedDemandeId = null;
+      return;
+    }
+
+    this.selectedDemandeId = demandeId;
+
+    // Charger les détails de la demande
+    this.demandeApproService.getById(demandeId).subscribe({
+      next: (demande) => {
         // Vider le tableau actuel
         while (this.produitsArray.length > 0) {
           this.produitsArray.removeAt(0);
         }
 
         // Ajouter les produits de la demande
-        produits.forEach((item: any) => {
-          const produit = this.produits.find(p => p.id === item.produit_id);
-          const ligne = this.fb.group({
-            produit_id: [item.produit_id, Validators.required],
-            quantite: [item.quantite, [Validators.required, Validators.min(1)]],
-            prix_unitaire: [produit?.prix_achat || 0, [Validators.required, Validators.min(0)]]
+        if (demande.detail_demandes && demande.detail_demandes.length > 0) {
+          demande.detail_demandes.forEach((detail: any) => {
+            const produit = this.produits.find(p => p.id === detail.produit_id);
+            const ligne = this.fb.group({
+              produit_id: [detail.produit_id, Validators.required],
+              quantite: [detail.quantite_demandee, [Validators.required, Validators.min(1)]],
+              prix_unitaire: [produit?.prix_achat || 0, [Validators.required, Validators.min(0)]]
+            });
+            this.produitsArray.push(ligne);
           });
-          this.produitsArray.push(ligne);
-        });
 
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Demande chargée',
+            detail: `${demande.detail_demandes.length} produit(s) chargé(s) depuis la demande ${demande.numero}`,
+            life: 3000
+          });
+        } else {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Attention',
+            detail: 'Aucun produit trouvé dans cette demande',
+            life: 3000
+          });
+          // Ajouter au moins une ligne vide
+          this.produitsArray.push(this.createLigneProduit());
+        }
+      },
+      error: () => {
         this.messageService.add({
-          severity: 'info',
-          summary: 'Demande d\'approvisionnement',
-          detail: `Produits chargés depuis la demande ${this.demandeApproNumero}`,
-          life: 5000
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Erreur lors du chargement de la demande',
+          life: 3000
         });
-      }, 500);
-    }
+      }
+    });
   }
 
   initForm(): void {
@@ -197,9 +219,9 @@ export class CommandeAchatCreateComponent implements OnInit {
           detail: 'Commande créée avec succès'
         });
 
-        // Si la commande vient d'une demande d'approvisionnement, marquer la demande comme traitée
-        if (this.fromDemandeAppro && this.demandeApproId) {
-          this.traiterDemandeApprovisionnement(response.commande.id);
+        // Si une demande d'approvisionnement a été sélectionnée, marquer la demande comme traitée
+        if (this.selectedDemandeId) {
+          this.traiterDemandeApprovisionnement(response.commande.id, this.selectedDemandeId);
         } else {
           this.loading = false;
           this.router.navigate(['/commandes-achat', response.commande.id]);
@@ -216,20 +238,20 @@ export class CommandeAchatCreateComponent implements OnInit {
     });
   }
 
-  traiterDemandeApprovisionnement(commandeId: number): void {
+  traiterDemandeApprovisionnement(commandeId: number, demandeId: number): void {
     const commentaire = `Commande d'achat #${commandeId} créée pour cette demande.`;
 
-    this.demandeApproService.traiter(this.demandeApproId!, commentaire).subscribe({
+    this.demandeApproService.traiter(demandeId, commentaire).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Demande traitée',
-          detail: `La demande d'approvisionnement ${this.demandeApproNumero} a été marquée comme traitée`,
+          detail: 'La demande d\'approvisionnement a été marquée comme traitée',
           life: 5000
         });
         this.loading = false;
         // Rediriger vers les détails de la demande d'approvisionnement
-        this.router.navigate(['/demandes-approvisionnement', this.demandeApproId]);
+        this.router.navigate(['/demandes-approvisionnement', demandeId]);
       },
       error: () => {
         this.messageService.add({
@@ -246,12 +268,7 @@ export class CommandeAchatCreateComponent implements OnInit {
   }
 
   annuler(): void {
-    if (this.fromDemandeAppro && this.demandeApproId) {
-      // Retourner à la demande d'approvisionnement
-      this.router.navigate(['/demandes-approvisionnement', this.demandeApproId]);
-    } else {
-      this.router.navigate(['/commandes-achat']);
-    }
+    this.router.navigate(['/commandes-achat']);
   }
 
   formatCurrency(value: number): string {

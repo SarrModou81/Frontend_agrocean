@@ -179,8 +179,8 @@ export class DemandeDetailComponent implements OnInit {
   }
 
   ouvrirDialogTraiter(): void {
-    // Rediriger vers la création de commande d'achat pour traiter la demande
-    this.creerCommandeAchat();
+    // Rediriger vers la création de commande d'achat
+    this.router.navigate(['/commandes-achat/create']);
   }
 
   confirmerTraiter(): void {
@@ -252,28 +252,6 @@ export class DemandeDetailComponent implements OnInit {
   canRejeter(): boolean {
     return this.isAgentApprovisionnement &&
            (this.demande?.statut === 'Envoyée' || this.demande?.statut === 'EnCours');
-  }
-
-  creerCommandeAchat(): void {
-    if (!this.demande) return;
-
-    // Préparer les produits pour la commande d'achat
-    const produits = this.demande.detail_demandes?.map(detail => ({
-      produit_id: detail.produit_id,
-      produit: detail.produit,
-      quantite: detail.quantite_demandee,
-      justification: detail.justification
-    })) || [];
-
-    // Naviguer vers la création de commande avec les données pré-remplies
-    this.router.navigate(['/commandes-achat/create'], {
-      state: {
-        fromDemandeAppro: true,
-        demandeId: this.demande.id,
-        demandeNumero: this.demande.numero,
-        produits: produits
-      }
-    });
   }
 
   getStatutSeverity(statut: string): 'success' | 'secondary' | 'info' | 'warning' | 'danger' | 'contrast' {
