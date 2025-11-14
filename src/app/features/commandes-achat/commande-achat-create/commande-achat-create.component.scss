@@ -13,41 +13,6 @@
     }
   }
 
-  .demande-appro-section {
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    border: 2px solid #e3f2fd;
-
-    h3 {
-      color: #1976d2;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      &::before {
-        content: '📋';
-        font-size: 1.5rem;
-      }
-    }
-
-    .hint {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #6c757d;
-      font-size: 0.875rem;
-      margin-top: 0.5rem;
-      font-style: italic;
-
-      i {
-        color: #1976d2;
-      }
-    }
-  }
-
   .section {
     margin-bottom: 2rem;
     padding-bottom: 2rem;
@@ -68,6 +33,30 @@
 
       h3 {
         margin: 0;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .demande-select-wrapper {
+          ::ng-deep {
+            .p-dropdown {
+              border: 2px solid #2196f3;
+              background-color: #e3f2fd;
+
+              &:hover {
+                border-color: #1976d2;
+                background-color: #bbdefb;
+              }
+
+              .p-dropdown-label {
+                font-weight: 500;
+              }
+            }
+          }
+        }
       }
     }
   }

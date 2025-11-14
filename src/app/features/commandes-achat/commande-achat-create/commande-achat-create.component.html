@@ -12,32 +12,6 @@
     </div>
 
     <form [formGroup]="commandeForm" (ngSubmit)="onSubmit()">
-      <!-- Sélection demande d'approvisionnement -->
-      <div class="section demande-appro-section">
-        <h3>Demande d'Approvisionnement</h3>
-        <div class="field">
-          <label for="demande_appro">Sélectionner une demande d'approvisionnement (optionnel)</label>
-          <p-dropdown
-            id="demande_appro"
-            [options]="demandesAppro"
-            [(ngModel)]="selectedDemandeId"
-            [ngModelOptions]="{standalone: true}"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Choisir une demande d'approvisionnement..."
-            [filter]="true"
-            [showClear]="true"
-            (onChange)="onDemandeApproChange($event)"
-            [style]="{'width':'100%'}"
-          >
-          </p-dropdown>
-          <small class="hint">
-            <i class="pi pi-info-circle"></i>
-            Sélectionnez une demande pour charger automatiquement les produits demandés
-          </small>
-        </div>
-      </div>
-
       <!-- Informations générales -->
       <div class="section">
         <h3>Informations Générales</h3>
@@ -95,14 +69,33 @@
       <div class="section">
         <div class="section-header">
           <h3>Produits</h3>
-          <button 
-            pButton 
-            type="button"
-            icon="pi pi-plus" 
-            label="Ajouter une ligne"
-            class="p-button-sm"
-            (click)="ajouterLigne()"
-          ></button>
+          <div class="header-actions">
+            <!-- Select demande d'approvisionnement -->
+            <div class="demande-select-wrapper">
+              <p-dropdown
+                id="demande_appro"
+                [options]="demandesAppro"
+                [(ngModel)]="selectedDemandeId"
+                [ngModelOptions]="{standalone: true}"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="📋 Charger depuis une demande d'appro..."
+                [filter]="true"
+                [showClear]="true"
+                (onChange)="onDemandeApproChange($event)"
+                [style]="{'width':'350px'}"
+              >
+              </p-dropdown>
+            </div>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-plus"
+              label="Ajouter une ligne"
+              class="p-button-sm"
+              (click)="ajouterLigne()"
+            ></button>
+          </div>
         </div>
 
         <div class="produits-table">
