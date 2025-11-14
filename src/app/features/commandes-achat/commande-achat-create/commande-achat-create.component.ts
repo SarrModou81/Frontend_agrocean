@@ -5,6 +5,7 @@ import { CommandeAchatService, FournisseurService } from '../../../core/services
 import { Fournisseur, Produit } from '../../../core/models';
 import { MessageService } from 'primeng/api';
 import { ProduitService } from '../../../core/services/produit.service';
+import { DemandeApprovisionnementService } from '../../../core/services/demande-approvisionnement.service';
 
 @Component({
   selector: 'app-commande-achat-create',
@@ -17,6 +18,7 @@ export class CommandeAchatCreateComponent implements OnInit {
   fournisseurs: Fournisseur[] = [];
   produits: Produit[] = [];
   fromDemandeAppro = false;
+  demandeApproId: number | null = null;
   demandeApproNumero = '';
 
   constructor(
@@ -25,7 +27,8 @@ export class CommandeAchatCreateComponent implements OnInit {
     private commandeService: CommandeAchatService,
     private fournisseurService: FournisseurService,
     private produitService: ProduitService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private demandeApproService: DemandeApprovisionnementService
   ) {
     // Récupérer les données de navigation
     const navigation = this.router.getCurrentNavigation();
@@ -33,6 +36,7 @@ export class CommandeAchatCreateComponent implements OnInit {
 
     if (state && state['fromDemandeAppro']) {
       this.fromDemandeAppro = true;
+      this.demandeApproId = state['demandeId'];
       this.demandeApproNumero = state['demandeNumero'];
     }
   }
@@ -192,8 +196,14 @@ export class CommandeAchatCreateComponent implements OnInit {
           summary: 'Succès',
           detail: 'Commande créée avec succès'
         });
-        this.loading = false;
-        this.router.navigate(['/commandes-achat', response.commande.id]);
+
+        // Si la commande vient d'une demande d'approvisionnement, marquer la demande comme traitée
+        if (this.fromDemandeAppro && this.demandeApproId) {
+          this.traiterDemandeApprovisionnement(response.commande.id);
+        } else {
+          this.loading = false;
+          this.router.navigate(['/commandes-achat', response.commande.id]);
+        }
       },
       error: (error) => {
         this.messageService.add({
@@ -206,8 +216,42 @@ export class CommandeAchatCreateComponent implements OnInit {
     });
   }
 
+  traiterDemandeApprovisionnement(commandeId: number): void {
+    const commentaire = `Commande d'achat #${commandeId} créée pour cette demande.`;
+
+    this.demandeApproService.traiter(this.demandeApproId!, commentaire).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Demande traitée',
+          detail: `La demande d'approvisionnement ${this.demandeApproNumero} a été marquée comme traitée`,
+          life: 5000
+        });
+        this.loading = false;
+        // Rediriger vers les détails de la demande d'approvisionnement
+        this.router.navigate(['/demandes-approvisionnement', this.demandeApproId]);
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Attention',
+          detail: 'La commande a été créée mais la demande n\'a pas pu être marquée comme traitée automatiquement',
+          life: 5000
+        });
+        this.loading = false;
+        // Rediriger vers les détails de la commande même en cas d'erreur
+        this.router.navigate(['/commandes-achat', commandeId]);
+      }
+    });
+  }
+
   annuler(): void {
-    this.router.navigate(['/commandes-achat']);
+    if (this.fromDemandeAppro && this.demandeApproId) {
+      // Retourner à la demande d'approvisionnement
+      this.router.navigate(['/demandes-approvisionnement', this.demandeApproId]);
+    } else {
+      this.router.navigate(['/commandes-achat']);
+    }
   }
 
   formatCurrency(value: number): string {

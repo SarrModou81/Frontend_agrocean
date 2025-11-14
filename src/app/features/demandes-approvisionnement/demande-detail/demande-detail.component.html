@@ -16,10 +16,8 @@
       <!-- Actions Agent -->
       <button *ngIf="canPrendrEnCharge()" pButton type="button" icon="pi pi-check"
               label="Prendre en charge" class="p-button-primary" (click)="prendrEnCharge()"></button>
-      <button *ngIf="canCreerCommandeAchat()" pButton type="button" icon="pi pi-shopping-cart"
-              label="Créer commande d'achat" class="p-button-info" (click)="creerCommandeAchat()"></button>
-      <button *ngIf="canTraiter()" pButton type="button" icon="pi pi-check-circle"
-              label="Traiter" class="p-button-success" (click)="ouvrirDialogTraiter()"></button>
+      <button *ngIf="canTraiter()" pButton type="button" icon="pi pi-shopping-cart"
+              label="Passer commande" class="p-button-success" (click)="ouvrirDialogTraiter()"></button>
       <button *ngIf="canRejeter()" pButton type="button" icon="pi pi-ban"
               label="Rejeter" class="p-button-danger p-button-outlined" (click)="ouvrirDialogRejeter()"></button>
     </div>
@@ -193,22 +191,7 @@
   </ng-template>
 </p-dialog>
 
-<!-- Dialog Traiter (Agent) -->
-<p-dialog header="Traiter la demande" [(visible)]="showTraiterDialog"
-          [modal]="true" [style]="{width: '500px'}">
-  <div class="dialog-content">
-    <p>Commentaire (optionnel) :</p>
-    <textarea pInputTextarea [(ngModel)]="commentaireTraitement"
-              rows="4" [style]="{'width':'100%'}"
-              placeholder="Saisissez un commentaire..."></textarea>
-  </div>
-  <ng-template pTemplate="footer">
-    <button pButton type="button" label="Annuler"
-            class="p-button-text" (click)="showTraiterDialog = false"></button>
-    <button pButton type="button" label="Valider" icon="pi pi-check"
-            class="p-button-success" (click)="confirmerTraiter()" [loading]="loading"></button>
-  </ng-template>
-</p-dialog>
+<!-- Dialog Traiter désactivé - Le traitement se fait maintenant via la création de commande d'achat -->
 
 <!-- Dialog Rejeter (Agent) -->
 <p-dialog header="Rejeter la demande" [(visible)]="showRejeterDialog"

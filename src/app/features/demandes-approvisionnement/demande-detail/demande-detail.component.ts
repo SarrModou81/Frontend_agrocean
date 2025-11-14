@@ -179,34 +179,13 @@ export class DemandeDetailComponent implements OnInit {
   }
 
   ouvrirDialogTraiter(): void {
-    this.commentaireTraitement = '';
-    this.showTraiterDialog = true;
+    // Rediriger vers la création de commande d'achat pour traiter la demande
+    this.creerCommandeAchat();
   }
 
   confirmerTraiter(): void {
-    if (!this.demande) return;
-
-    this.loading = true;
-    this.demandeService.traiter(this.demande.id!, this.commentaireTraitement).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Succès',
-          detail: 'Demande traitée avec succès'
-        });
-        this.showTraiterDialog = false;
-        this.loading = false;
-        this.loadDemande(this.demande!.id!);
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Erreur lors du traitement'
-        });
-        this.loading = false;
-      }
-    });
+    // Cette méthode n'est plus utilisée car le traitement se fait via la commande d'achat
+    // Gardée pour compatibilité
   }
 
   ouvrirDialogRejeter(): void {
@@ -271,11 +250,6 @@ export class DemandeDetailComponent implements OnInit {
   }
 
   canRejeter(): boolean {
-    return this.isAgentApprovisionnement &&
-           (this.demande?.statut === 'Envoyée' || this.demande?.statut === 'EnCours');
-  }
-
-  canCreerCommandeAchat(): boolean {
     return this.isAgentApprovisionnement &&
            (this.demande?.statut === 'Envoyée' || this.demande?.statut === 'EnCours');
   }
