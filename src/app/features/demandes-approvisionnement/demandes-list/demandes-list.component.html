@@ -1,0 +1,255 @@
+<div class="demandes-container">
+  <p-card>
+    <div class="header-section">
+      <div>
+        <h2>{{ isGestionnaireStock ? 'Mes Demandes d\'Approvisionnement' : 'Demandes à Traiter' }}</h2>
+        <p class="subtitle">
+          <i class="pi pi-info-circle"></i>
+          {{ isGestionnaireStock ? 'Créez et suivez vos demandes d\'approvisionnement' : 'Gérez les demandes reçues' }}
+        </p>
+      </div>
+      <button 
+        pButton 
+        icon="pi pi-plus" 
+        label="Nouvelle Demande" 
+        (click)="nouvelleDemande()"
+        class="p-button-success"
+        *ngIf="isGestionnaireStock"
+      ></button>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="stats-grid">
+      <p-card styleClass="stat-card">
+        <div class="stat-content">
+          <i class="pi pi-inbox stat-icon"></i>
+          <div>
+            <div class="stat-value">{{ stats?.total || 0 }}</div>
+            <div class="stat-label">Total</div>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card styleClass="stat-card" *ngIf="isGestionnaireStock">
+        <div class="stat-content">
+          <i class="pi pi-clock stat-icon" style="color: #f59e0b;"></i>
+          <div>
+            <div class="stat-value">{{ stats?.en_cours || 0 }}</div>
+            <div class="stat-label">En Cours</div>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card styleClass="stat-card" *ngIf="!isGestionnaireStock">
+        <div class="stat-content">
+          <i class="pi pi-exclamation-circle stat-icon" style="color: #dc3545;"></i>
+          <div>
+            <div class="stat-value">{{ stats?.en_attente || 0 }}</div>
+            <div class="stat-label">En Attente</div>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card styleClass="stat-card">
+        <div class="stat-content">
+          <i class="pi pi-check-circle stat-icon" style="color: #28a745;"></i>
+          <div>
+            <div class="stat-value">{{ stats?.traitees || 0 }}</div>
+            <div class="stat-label">Traitées</div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <label>Statut</label>
+        <p-dropdown 
+          [(ngModel)]="selectedStatut"
+          [options]="statuts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Tous les statuts"
+          [showClear]="true"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-group">
+        <label>Priorité</label>
+        <p-dropdown 
+          [(ngModel)]="selectedPriorite"
+          [options]="priorites"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Toutes les priorités"
+          [showClear]="true"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-actions">
+        <button 
+          pButton 
+          icon="pi pi-search" 
+          label="Filtrer"
+          (click)="applyFilters()"
+        ></button>
+        <button 
+          pButton 
+          icon="pi pi-times" 
+          label="Effacer"
+          class="p-button-secondary"
+          (click)="clearFilters()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <p-table 
+      [value]="demandes" 
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="pageSize"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      (onLazyLoad)="onPageChange($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} demandes"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Numéro</th>
+          <th>Date</th>
+          <th *ngIf="!isGestionnaireStock">Demandeur</th>
+          <th *ngIf="isGestionnaireStock">Destinataire</th>
+          <th>Priorité</th>
+          <th>Produits</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-demande>
+        <tr>
+          <td><code>{{ demande.numero }}</code></td>
+          <td>{{ demande.date_demande | date:'dd/MM/yyyy' }}</td>
+          <td *ngIf="!isGestionnaireStock">
+            <strong>{{ demande.demandeur?.prenom }} {{ demande.demandeur?.nom }}</strong>
+          </td>
+          <td *ngIf="isGestionnaireStock">
+            <span *ngIf="demande.destinataire">
+              {{ demande.destinataire?.prenom }} {{ demande.destinataire?.nom }}
+            </span>
+            <span *ngIf="!demande.destinataire" class="text-muted">Non assignée</span>
+          </td>
+          <td>
+            <p-tag 
+              [value]="demande.priorite" 
+              [severity]="getPrioriteSeverity(demande.priorite)"
+            ></p-tag>
+          </td>
+          <td>
+            <p-badge [value]="demande.detail_demandes?.length || 0" severity="info"></p-badge>
+          </td>
+          <td>
+            <p-tag 
+              [value]="demande.statut" 
+              [severity]="getStatutSeverity(demande.statut)"
+            ></p-tag>
+          </td>
+          <td>
+            <button 
+              pButton 
+              icon="pi pi-eye" 
+              class="p-button-text p-button-info"
+              (click)="voirDetails(demande)"
+              pTooltip="Voir détails"
+            ></button>
+            
+            <!-- Actions pour Gestionnaire -->
+            <button 
+              pButton 
+              icon="pi pi-send" 
+              class="p-button-text p-button-success"
+              (click)="envoyerDemande(demande)"
+              pTooltip="Envoyer"
+              *ngIf="isGestionnaireStock && demande.statut === 'Brouillon'"
+            ></button>
+            
+            <button 
+              pButton 
+              icon="pi pi-times" 
+              class="p-button-text p-button-danger"
+              (click)="annulerDemande(demande)"
+              pTooltip="Annuler"
+              *ngIf="isGestionnaireStock && !['Traitée', 'Rejetée', 'Annulée'].includes(demande.statut)"
+            ></button>
+
+            <!-- Actions pour Agent -->
+            <button 
+              pButton 
+              icon="pi pi-check" 
+              class="p-button-text p-button-primary"
+              (click)="prendrEnCharge(demande)"
+              pTooltip="Prendre en charge"
+              *ngIf="!isGestionnaireStock && demande.statut === 'Envoyée'"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="isGestionnaireStock ? 7 : 7" class="text-center">
+            <div class="empty-state">
+              <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+              <p>Aucune demande trouvée</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog d'envoi -->
+<p-dialog 
+  [(visible)]="showEnvoiDialog" 
+  header="Envoyer la Demande"
+  [modal]="true" 
+  [style]="{width: '30vw'}"
+>
+  <div class="p-fluid">
+    <div class="field">
+      <label for="destinataire">Agent d'Approvisionnement (optionnel)</label>
+      <p-dropdown 
+        id="destinataire"
+        [(ngModel)]="selectedDestinataire"
+        [options]="agents"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sélectionner un agent (auto si vide)"
+        [showClear]="true"
+      ></p-dropdown>
+      <small class="help-text">Laissez vide pour une assignation automatique</small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button 
+      pButton 
+      label="Annuler" 
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="showEnvoiDialog = false"
+    ></button>
+    <button 
+      pButton 
+      label="Envoyer" 
+      icon="pi pi-send"
+      (click)="confirmerEnvoi()"
+      [loading]="loading"
+    ></button>
+  </ng-template>
+</p-dialog>

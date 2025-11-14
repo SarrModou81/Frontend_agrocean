@@ -1,0 +1,228 @@
+<div class="demande-create-container">
+  <p-card>
+    <div class="header-section">
+      <h2>Nouvelle Demande d'Approvisionnement</h2>
+      <button 
+        pButton 
+        icon="pi pi-arrow-left" 
+        label="Retour"
+        class="p-button-secondary"
+        (click)="annuler()"
+      ></button>
+    </div>
+
+    <form [formGroup]="demandeForm" (ngSubmit)="onSubmit()">
+      <!-- Informations générales -->
+      <div class="section">
+        <h3>Informations Générales</h3>
+        <div class="field-grid">
+          <div class="field">
+            <label for="date_demande">Date de Demande *</label>
+            <p-calendar 
+              id="date_demande"
+              formControlName="date_demande"
+              [showIcon]="true"
+              dateFormat="dd/mm/yy"
+              [class.ng-invalid]="demandeForm.get('date_demande')?.invalid && demandeForm.get('date_demande')?.touched"
+            ></p-calendar>
+            <small class="p-error" *ngIf="demandeForm.get('date_demande')?.invalid && demandeForm.get('date_demande')?.touched">
+              La date est requise
+            </small>
+          </div>
+
+          <div class="field">
+            <label for="priorite">Priorité *</label>
+            <p-dropdown 
+              id="priorite"
+              formControlName="priorite"
+              [options]="priorites"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionner une priorité"
+              [class.ng-invalid]="demandeForm.get('priorite')?.invalid && demandeForm.get('priorite')?.touched"
+            >
+              <ng-template let-priorite pTemplate="item">
+                <div class="priorite-option">
+                  <p-tag 
+                    [value]="priorite.label" 
+                    [severity]="getPrioriteSeverity(priorite.value)"
+                  ></p-tag>
+                </div>
+              </ng-template>
+            </p-dropdown>
+            <small class="p-error" *ngIf="demandeForm.get('priorite')?.invalid && demandeForm.get('priorite')?.touched">
+              La priorité est requise
+            </small>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="motif">Motif de la Demande</label>
+          <textarea 
+            id="motif" 
+            pInputTextarea 
+            formControlName="motif"
+            rows="3"
+            placeholder="Expliquez la raison de cette demande d'approvisionnement..."
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Produits -->
+      <div class="section">
+        <div class="section-header">
+          <h3>Produits à Approvisionner</h3>
+          <div class="section-actions">
+            <button 
+              pButton 
+              type="button"
+              icon="pi pi-bolt" 
+              label="Ajouter Produits en Rupture"
+              class="p-button-warning p-button-sm"
+              (click)="ajouterProduitsRupture()"
+              [loading]="loadingRupture"
+            ></button>
+            <button 
+              pButton 
+              type="button"
+              icon="pi pi-plus" 
+              label="Ajouter un Produit"
+              class="p-button-sm"
+              (click)="ajouterLigne()"
+            ></button>
+          </div>
+        </div>
+
+        <div class="produits-table">
+          <div class="table-header">
+            <div class="col-produit">Produit</div>
+            <div class="col-stock">Stock Actuel</div>
+            <div class="col-seuil">Seuil Mini</div>
+            <div class="col-quantite">Quantité Demandée</div>
+            <div class="col-justification">Justification</div>
+            <div class="col-action">Action</div>
+          </div>
+
+          <div class="table-body" formArrayName="produits">
+            <div
+              class="table-row"
+              *ngFor="let ligne of produitsArray.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <div class="col-produit">
+                <p-dropdown
+                  formControlName="produit_id"
+                  [options]="produits"
+                  optionLabel="nom"
+                  optionValue="id"
+                  placeholder="Sélectionner un produit"
+                  [filter]="true"
+                  filterBy="nom,code"
+                  (onChange)="onProduitChange(i)"
+                  [class.ng-invalid]="ligne.get('produit_id')?.invalid && ligne.get('produit_id')?.touched"
+                >
+                  <ng-template let-produit pTemplate="item">
+                    <div>
+                      <strong>{{ produit.nom }}</strong>
+                      <br>
+                      <small>{{ produit.code }} - Stock: {{ produit.stock_total || 0 }}</small>
+                    </div>
+                  </ng-template>
+                </p-dropdown>
+              </div>
+
+              <div class="col-stock">
+                <p-badge 
+                  [value]="getStockActuel(i)" 
+                  [severity]="getStockSeverity(i)"
+                ></p-badge>
+              </div>
+
+              <div class="col-seuil">
+                <span class="seuil-value">{{ getSeuilMinimum(i) }}</span>
+              </div>
+
+              <div class="col-quantite">
+                <p-inputNumber
+                  formControlName="quantite_demandee"
+                  [showButtons]="true"
+                  [min]="1"
+                  [class.ng-invalid]="ligne.get('quantite_demandee')?.invalid && ligne.get('quantite_demandee')?.touched"
+                ></p-inputNumber>
+              </div>
+
+              <div class="col-justification">
+                <input 
+                  type="text" 
+                  pInputText 
+                  formControlName="justification"
+                  placeholder="Raison..."
+                  class="w-full"
+                >
+              </div>
+
+              <div class="col-action">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-danger p-button-text"
+                  (click)="supprimerLigne(i)"
+                  [disabled]="produitsArray.length === 1"
+                ></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-empty" *ngIf="produitsArray.length === 0">
+            <p><i class="pi pi-inbox"></i> Aucun produit ajouté</p>
+            <small>Cliquez sur "Ajouter un Produit" pour commencer</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Résumé -->
+      <div class="summary-section" *ngIf="produitsArray.length > 0">
+        <p-card>
+          <div class="summary-content">
+            <div class="summary-item">
+              <i class="pi pi-shopping-cart"></i>
+              <div>
+                <div class="summary-label">Produits</div>
+                <div class="summary-value">{{ produitsArray.length }}</div>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="pi pi-box"></i>
+              <div>
+                <div class="summary-label">Quantité Totale</div>
+                <div class="summary-value">{{ getTotalQuantite() }}</div>
+              </div>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button 
+          pButton 
+          type="button"
+          label="Annuler"
+          icon="pi pi-times"
+          class="p-button-secondary"
+          (click)="annuler()"
+        ></button>
+        <button 
+          pButton 
+          type="submit"
+          label="Créer la Demande"
+          icon="pi pi-check"
+          [loading]="loading"
+          [disabled]="demandeForm.invalid || loading || produitsArray.length === 0"
+          class="p-button-success"
+        ></button>
+      </div>
+    </form>
+  </p-card>
+</div>

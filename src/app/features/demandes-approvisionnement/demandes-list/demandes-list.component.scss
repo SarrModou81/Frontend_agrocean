@@ -1,0 +1,139 @@
+.demandes-container {
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+
+    h2 {
+      margin: 0 0 0.5rem 0;
+      color: #495057;
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: #6c757d;
+      font-size: 0.95rem;
+      margin: 0;
+
+      i {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    ::ng-deep .stat-card {
+      .p-card-body {
+        padding: 1rem;
+      }
+
+      .stat-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .stat-icon {
+          font-size: 2.5rem;
+          color: #667eea;
+        }
+
+        .stat-value {
+          font-size: 2rem;
+          font-weight: 700;
+          color: #495057;
+          line-height: 1;
+        }
+
+        .stat-label {
+          font-size: 0.875rem;
+          color: #6c757d;
+          margin-top: 0.25rem;
+        }
+      }
+    }
+  }
+
+  .filters-section {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) auto;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+
+    .filter-group {
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #495057;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+    }
+
+    .filter-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-self: flex-end;
+    }
+  }
+
+  .text-muted {
+    color: #6c757d;
+    font-style: italic;
+  }
+
+  .empty-state {
+    padding: 2rem;
+    text-align: center;
+
+    p {
+      margin-top: 1rem;
+      color: #6c757d;
+    }
+  }
+
+  .help-text {
+    display: block;
+    margin-top: 0.5rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-tbody > tr > td {
+        padding: 1rem;
+
+        code {
+          background: #e9ecef;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.875rem;
+        }
+      }
+
+      .p-button-text {
+        padding: 0.5rem;
+        margin: 0 0.25rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .demandes-container {
+    .filters-section {
+      grid-template-columns: 1fr;
+    }
+  }
+}

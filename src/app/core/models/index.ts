@@ -246,3 +246,32 @@ export interface FactureFournisseur {
   montant_restant?: number;
   jours_retard?: number;
 }
+
+export interface DemandeApprovisionnement {
+  id?: number;
+  numero: string;
+  demandeur_id: number;
+  demandeur?: any;
+  destinataire_id?: number;
+  destinataire?: any;
+  date_demande: string;
+  motif?: string;
+  priorite: 'Normale' | 'Urgente' | 'Critique';
+  statut: 'Brouillon' | 'Envoyée' | 'EnCours' | 'Traitée' | 'Rejetée' | 'Annulée';
+  date_traitement?: string;
+  commentaire_traitement?: string;
+  created_at?: string;
+  updated_at?: string;
+  detail_demandes?: DetailDemandeApprovisionnement[];
+}
+
+export interface DetailDemandeApprovisionnement {
+  id?: number;
+  demande_approvisionnement_id: number;
+  produit_id: number;
+  produit?: Produit;
+  quantite_demandee: number;
+  quantite_actuelle?: number;
+  seuil_minimum?: number;
+  justification?: string;
+}
