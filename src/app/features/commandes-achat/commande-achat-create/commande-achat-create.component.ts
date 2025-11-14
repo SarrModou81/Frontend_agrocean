@@ -16,6 +16,8 @@ export class CommandeAchatCreateComponent implements OnInit {
   loading = false;
   fournisseurs: Fournisseur[] = [];
   produits: Produit[] = [];
+  fromDemandeAppro = false;
+  demandeApproNumero = '';
 
   constructor(
     private fb: FormBuilder,
@@ -24,12 +26,61 @@ export class CommandeAchatCreateComponent implements OnInit {
     private fournisseurService: FournisseurService,
     private produitService: ProduitService,
     private messageService: MessageService
-  ) {}
+  ) {
+    // Récupérer les données de navigation
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras?.state;
+
+    if (state && state['fromDemandeAppro']) {
+      this.fromDemandeAppro = true;
+      this.demandeApproNumero = state['demandeNumero'];
+    }
+  }
 
   ngOnInit(): void {
     this.initForm();
     this.loadFournisseurs();
     this.loadProduits();
+
+    // Si on vient d'une demande d'approvisionnement, pré-remplir les produits
+    if (this.fromDemandeAppro) {
+      this.preRemplirDepuisDemandeAppro();
+    }
+  }
+
+  preRemplirDepuisDemandeAppro(): void {
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras?.state;
+
+    if (state && state['produits']) {
+      const produits = state['produits'];
+
+      // Attendre que les produits soient chargés
+      setTimeout(() => {
+        // Vider le tableau actuel
+        while (this.produitsArray.length > 0) {
+          this.produitsArray.removeAt(0);
+        }
+
+        // Ajouter les produits de la demande
+        produits.forEach((item: any) => {
+          const produit = this.produits.find(p => p.id === item.produit_id);
+          const ligne = this.fb.group({
+            produit_id: [item.produit_id, Validators.required],
+            quantite: [item.quantite, [Validators.required, Validators.min(1)]],
+            prix_unitaire: [produit?.prix_achat || 0, [Validators.required, Validators.min(0)]]
+          });
+          this.produitsArray.push(ligne);
+        });
+
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Demande d\'approvisionnement',
+          detail: `Produits chargés depuis la demande ${this.demandeApproNumero}`,
+          life: 5000
+        });
+      }, 500);
+    }
   }
 
   initForm(): void {

@@ -16,6 +16,8 @@
       <!-- Actions Agent -->
       <button *ngIf="canPrendrEnCharge()" pButton type="button" icon="pi pi-check"
               label="Prendre en charge" class="p-button-primary" (click)="prendrEnCharge()"></button>
+      <button *ngIf="canCreerCommandeAchat()" pButton type="button" icon="pi pi-shopping-cart"
+              label="Créer commande d'achat" class="p-button-info" (click)="creerCommandeAchat()"></button>
       <button *ngIf="canTraiter()" pButton type="button" icon="pi pi-check-circle"
               label="Traiter" class="p-button-success" (click)="ouvrirDialogTraiter()"></button>
       <button *ngIf="canRejeter()" pButton type="button" icon="pi pi-ban"

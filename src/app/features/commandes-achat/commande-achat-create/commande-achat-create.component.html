@@ -2,14 +2,22 @@
   <p-card>
     <div class="header-section">
       <h2>Nouvelle Commande d'Achat</h2>
-      <button 
-        pButton 
-        icon="pi pi-arrow-left" 
+      <button
+        pButton
+        icon="pi pi-arrow-left"
         label="Retour"
         class="p-button-secondary"
         (click)="annuler()"
       ></button>
     </div>
+
+    <!-- Message si commande basée sur demande d'appro -->
+    <p-message
+      *ngIf="fromDemandeAppro"
+      severity="info"
+      text="Cette commande est basée sur la demande d'approvisionnement {{ demandeApproNumero }}"
+      [style]="{'margin-bottom': '1.5rem'}"
+    ></p-message>
 
     <form [formGroup]="commandeForm" (ngSubmit)="onSubmit()">
       <!-- Informations générales -->

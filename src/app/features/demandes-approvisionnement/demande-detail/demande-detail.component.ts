@@ -275,6 +275,33 @@ export class DemandeDetailComponent implements OnInit {
            (this.demande?.statut === 'Envoyée' || this.demande?.statut === 'EnCours');
   }
 
+  canCreerCommandeAchat(): boolean {
+    return this.isAgentApprovisionnement &&
+           (this.demande?.statut === 'Envoyée' || this.demande?.statut === 'EnCours');
+  }
+
+  creerCommandeAchat(): void {
+    if (!this.demande) return;
+
+    // Préparer les produits pour la commande d'achat
+    const produits = this.demande.detail_demandes?.map(detail => ({
+      produit_id: detail.produit_id,
+      produit: detail.produit,
+      quantite: detail.quantite_demandee,
+      justification: detail.justification
+    })) || [];
+
+    // Naviguer vers la création de commande avec les données pré-remplies
+    this.router.navigate(['/commandes-achat/create'], {
+      state: {
+        fromDemandeAppro: true,
+        demandeId: this.demande.id,
+        demandeNumero: this.demande.numero,
+        produits: produits
+      }
+    });
+  }
+
   getStatutSeverity(statut: string): 'success' | 'secondary' | 'info' | 'warning' | 'danger' | 'contrast' {
     const severityMap: Record<string, 'success' | 'secondary' | 'info' | 'warning' | 'danger' | 'contrast'> = {
       'Brouillon': 'secondary',
