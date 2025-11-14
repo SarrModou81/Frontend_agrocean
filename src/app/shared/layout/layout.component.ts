@@ -221,7 +221,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
           ]
         },
         {
-          label: 'Demandes d\'Approvisionnement',
+          label: 'Reception demande Appro',
           icon: 'pi pi-inbox',
           routerLink: ['/demandes-approvisionnement']
         }
