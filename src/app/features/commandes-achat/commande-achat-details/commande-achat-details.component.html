@@ -128,8 +128,10 @@
   [(visible)]="showReceptionDialog"
   header="Réceptionner la Commande"
   [modal]="true"
-  [style]="{width: '900px', maxHeight: '90vh'}"
-  [contentStyle]="{overflow: 'visible', maxHeight: 'calc(90vh - 150px)', display: 'flex', flexDirection: 'column'}"
+  [style]="{width: '900px'}"
+  [maximizable]="false"
+  [dismissableMask]="false"
+  styleClass="reception-dialog"
 >
   <div class="reception-content">
     <!-- Sélection de l'entrepôt -->
