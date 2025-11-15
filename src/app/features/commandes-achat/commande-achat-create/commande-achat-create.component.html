@@ -71,7 +71,10 @@
           <h3>Produits</h3>
           <div class="header-actions">
             <!-- Select demande d'approvisionnement -->
-            <div class="demande-select-wrapper">
+            <div class="demande-select-container">
+              <label for="demande_appro" class="demande-label">
+                <i class="pi pi-inbox"></i> Charger une demande d'approvisionnement
+              </label>
               <p-dropdown
                 id="demande_appro"
                 [options]="demandesAppro"
@@ -79,11 +82,12 @@
                 [ngModelOptions]="{standalone: true}"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="📋 Charger depuis une demande d'appro..."
+                placeholder="Sélectionner une demande..."
                 [filter]="true"
                 [showClear]="true"
                 (onChange)="onDemandeApproChange($event)"
-                [style]="{'width':'350px'}"
+                styleClass="demande-dropdown"
+                [style]="{'width':'400px', 'min-width':'400px'}"
               >
               </p-dropdown>
             </div>
