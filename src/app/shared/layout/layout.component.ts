@@ -219,13 +219,17 @@ export class LayoutComponent implements OnInit, OnDestroy {
               routerLink: ['/commandes-achat/receptions']
             }
           ]
-        },
-        {
+        }
+      );
+
+      // "Reception demande Appro" uniquement pour AgentApprovisionnement (pas pour Administrateur)
+      if (this.currentUser?.role === 'AgentApprovisionnement') {
+        this.menuItems.push({
           label: 'Reception demande Appro',
           icon: 'pi pi-inbox',
           routerLink: ['/demandes-approvisionnement']
-        }
-      );
+        });
+      }
     }
 
     // Menu pour Comptable
