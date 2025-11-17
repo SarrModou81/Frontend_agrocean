@@ -105,11 +105,22 @@ export class LoginComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
+
+        // Message d'erreur plus explicite
+        let errorMessage = 'Email ou mot de passe incorrect. Veuillez réessayer.';
+
+        // Si le backend renvoie un message spécifique, l'utiliser
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error?.error) {
+          errorMessage = error.error.error;
+        }
+
         this.messageService.add({
           severity: 'error',
-          summary: 'Erreur de connexion',
-          detail: error.error?.error || 'Identifiants invalides',
-          life: 4000
+          summary: 'Échec de connexion',
+          detail: errorMessage,
+          life: 5000
         });
       }
     });
