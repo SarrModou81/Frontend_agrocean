@@ -237,4 +237,11 @@ export class LivraisonsListComponent implements OnInit {
     };
     return severityMap[statut] || 'info';
   }
+
+  getSelectedVente(): any {
+    if (this.selectedLivraison && this.selectedLivraison.vente_id) {
+      return this.ventes.find(v => v.id === this.selectedLivraison.vente_id);
+    }
+    return null;
+  }
 }
