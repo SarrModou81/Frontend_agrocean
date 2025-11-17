@@ -57,4 +57,9 @@ export class DemandeApprovisionnementService {
   getStatistiques(): Observable<any> {
     return this.http.get(`${this.apiUrl}/stats/global`);
   }
+
+  // Obtenir le nombre de demandes en attente (Envoyée + EnCours)
+  getDemandesEnAttenteCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${this.apiUrl}/count/en-attente`);
+  }
 }

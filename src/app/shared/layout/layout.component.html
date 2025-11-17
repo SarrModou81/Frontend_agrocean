@@ -21,6 +21,7 @@
     </div>
 
     <div class="header-right">
+      <!-- Notifications Alertes de Stock -->
       <button
         *ngIf="canViewAlertes()"
         pButton
@@ -29,9 +30,23 @@
         severity="danger"
         icon="pi pi-bell"
         class="p-button-text p-button-plain"
-        pTooltip="Notifications"
+        pTooltip="Alertes de stock"
         tooltipPosition="left"
         (click)="navigateToAlertes()"
+      ></button>
+
+      <!-- Notifications Demandes d'Approvisionnement -->
+      <button
+        *ngIf="canViewDemandesNotifications()"
+        pButton
+        pBadge
+        [value]="demandesEnAttente > 0 ? demandesEnAttente.toString() : ''"
+        severity="info"
+        icon="pi pi-inbox"
+        class="p-button-text p-button-plain"
+        pTooltip="Demandes d'approvisionnement en attente"
+        tooltipPosition="left"
+        (click)="navigateToDemandesAppro()"
       ></button>
 
       <div class="user-menu" *ngIf="currentUser">

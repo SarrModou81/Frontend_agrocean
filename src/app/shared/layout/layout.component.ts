@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService, User } from '../../core/services/auth.service';
 import { AlerteService } from '../../core/services/all-services';
+import { DemandeApprovisionnementService } from '../../core/services/demande-approvisionnement.service';
 import { MenuItem } from 'primeng/api';
 import { interval, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -16,12 +17,15 @@ export class LayoutComponent implements OnInit, OnDestroy {
   menuItems: MenuItem[] = [];
   sidebarVisible = true;
   alertesNonLues = 0;
+  demandesEnAttente = 0;
   private alerteSubscription?: Subscription;
+  private demandesSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private alerteService: AlerteService
+    private alerteService: AlerteService,
+    private demandeApproService: DemandeApprovisionnementService
   ) {}
 
   ngOnInit(): void {
@@ -39,12 +43,26 @@ export class LayoutComponent implements OnInit, OnDestroy {
             this.alertesNonLues = response.count;
           });
       }
+
+      // Charger le nombre de demandes en attente si l'utilisateur a accès
+      if (this.canViewDemandesNotifications()) {
+        this.loadDemandesCount();
+        // Rafraîchir toutes les 30 secondes
+        this.demandesSubscription = interval(30000)
+          .pipe(switchMap(() => this.demandeApproService.getDemandesEnAttenteCount()))
+          .subscribe(response => {
+            this.demandesEnAttente = response.count;
+          });
+      }
     });
   }
 
   ngOnDestroy(): void {
     if (this.alerteSubscription) {
       this.alerteSubscription.unsubscribe();
+    }
+    if (this.demandesSubscription) {
+      this.demandesSubscription.unsubscribe();
     }
   }
 
@@ -294,6 +312,28 @@ export class LayoutComponent implements OnInit, OnDestroy {
   // Vérifie si l'utilisateur peut voir les alertes
   canViewAlertes(): boolean {
     return this.authService.hasRole(['Administrateur', 'GestionnaireStock']);
+  }
+
+  // Charge le nombre de demandes en attente
+  loadDemandesCount(): void {
+    this.demandeApproService.getDemandesEnAttenteCount().subscribe({
+      next: (response) => {
+        this.demandesEnAttente = response.count;
+      },
+      error: () => {
+        this.demandesEnAttente = 0;
+      }
+    });
+  }
+
+  // Vérifie si l'utilisateur peut voir les notifications de demandes
+  canViewDemandesNotifications(): boolean {
+    return this.authService.hasRole(['Administrateur', 'AgentApprovisionnement']);
+  }
+
+  // Navigue vers la page des demandes d'approvisionnement
+  navigateToDemandesAppro(): void {
+    this.router.navigate(['/demandes-approvisionnement']);
   }
 
   // MÉTHODE AJOUTÉE - Affiche le rôle de manière lisible
