@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService, User } from '../../core/services/auth.service';
 import { AlerteService } from '../../core/services/all-services';
 import { DemandeApprovisionnementService } from '../../core/services/demande-approvisionnement.service';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, ConfirmationService } from 'primeng/api';
 import { interval, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
@@ -25,7 +25,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private alerteService: AlerteService,
-    private demandeApproService: DemandeApprovisionnementService
+    private demandeApproService: DemandeApprovisionnementService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -298,7 +299,18 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.authService.logout();
+    this.confirmationService.confirm({
+      message: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+      header: 'Confirmation de déconnexion',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Oui, se déconnecter',
+      rejectLabel: 'Annuler',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.authService.logout();
+      }
+    });
   }
 
   toggleSidebar(): void {
