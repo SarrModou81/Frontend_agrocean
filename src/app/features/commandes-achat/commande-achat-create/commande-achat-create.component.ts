@@ -38,16 +38,24 @@ export class CommandeAchatCreateComponent implements OnInit {
   }
 
   loadDemandesAppro(): void {
-    // Charger les demandes en cours ou envoyées pour les afficher dans le select
-    const params = { statut: 'EnCours,Envoyée' };
-
-    this.demandeApproService.getAll(params).subscribe({
+    // Charger toutes les demandes et filtrer uniquement celles non traitées
+    this.demandeApproService.getAll().subscribe({
       next: (response) => {
-        this.demandesAppro = response.data.map((demande: any) => ({
+        // Filtrer uniquement les demandes non traitées (EnCours et Envoyée)
+        // Exclure : Traitée, Rejetée, Annulée, Brouillon
+        const demandesNonTraitees = response.data.filter((demande: any) =>
+          demande.statut === 'EnCours' || demande.statut === 'Envoyée'
+        );
+
+        this.demandesAppro = demandesNonTraitees.map((demande: any) => ({
           label: `${demande.numero} - ${demande.demandeur?.prenom || ''} ${demande.demandeur?.nom || ''} (${demande.detail_demandes?.length || 0} produits)`,
           value: demande.id,
           data: demande
         }));
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des demandes d\'approvisionnement:', error);
+        this.demandesAppro = [];
       }
     });
   }
