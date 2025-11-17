@@ -77,6 +77,26 @@ export class LivraisonsListComponent implements OnInit {
     this.displayDialog = true;
   }
 
+  onVenteChange(): void {
+    if (this.selectedLivraison && this.selectedLivraison.vente_id) {
+      // Trouver la vente sélectionnée
+      const vente = this.ventes.find(v => v.id === this.selectedLivraison.vente_id);
+
+      if (vente && vente.client) {
+        // Remplir automatiquement l'adresse du client
+        this.selectedLivraison.adresse = vente.client.adresse || '';
+
+        // Message de confirmation
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Informations chargées',
+          detail: `Adresse du client ${vente.client.nom} chargée automatiquement`,
+          life: 3000
+        });
+      }
+    }
+  }
+
   editLivraison(livraison: any): void {
     this.selectedLivraison = {
       ...livraison,

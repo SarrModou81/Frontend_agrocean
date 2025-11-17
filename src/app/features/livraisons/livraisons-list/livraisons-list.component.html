@@ -54,7 +54,7 @@
   <div class="p-fluid" *ngIf="selectedLivraison">
     <div class="p-field" *ngIf="!selectedLivraison.id">
       <label>Vente *</label>
-      <p-dropdown [(ngModel)]="selectedLivraison.vente_id" [options]="ventes" optionLabel="reference" optionValue="id" [filter]="true" placeholder="Sélectionner une vente">
+      <p-dropdown [(ngModel)]="selectedLivraison.vente_id" [options]="ventes" optionLabel="reference" optionValue="id" [filter]="true" placeholder="Sélectionner une vente" (onChange)="onVenteChange()">
         <ng-template let-vente pTemplate="item">
           <div>
             <strong>{{ vente.reference }}</strong> - {{ vente.client?.nom }}
