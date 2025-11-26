@@ -49,10 +49,11 @@ export class AuthService {
   }
 
    getCsrfCookie() {
-  return this.http.get(`${environment.apiUrl}/sanctum/csrf-cookie`, {
+  return this.http.get(`${environment.baseUrl}/sanctum/csrf-cookie`, {
     withCredentials: true
   });
 }
+
 login(email: string, password: string): Observable<AuthResponse> {
   return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, 
     { email, password },
