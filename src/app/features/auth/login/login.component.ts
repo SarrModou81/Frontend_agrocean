@@ -77,54 +77,50 @@ export class LoginComponent implements OnInit {
     return this.loginForm.controls;
   }
 
- onSubmit(): void {
+onSubmit(): void {
   if (this.loginForm.invalid) {
-    Object.keys(this.loginForm.controls).forEach(key => {
-      this.loginForm.get(key)?.markAsTouched();
-    });
+    Object.keys(this.loginForm.controls).forEach(key =>
+      this.loginForm.get(key)?.markAsTouched()
+    );
     return;
   }
 
   this.loading = true;
-  const { email, password } = this.loginForm.value;
 
-  // 1️⃣ Charger le cookie CSRF d'abord
-  this.authService.getCsrfCookie().subscribe(() => {
+  this.authService.getCsrfCookie().subscribe({
+    next: () => {
+      // Après récupération du cookie, faire le login
+      const { email, password } = this.loginForm.value;
 
-    // 2️⃣ Ensuite faire le login
-    this.authService.login(email, password).subscribe({
-      next: (response) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Connexion réussie',
-          detail: `Bienvenue ${response.user.prenom} ${response.user.nom}`,
-          life: 3000
-        });
-
-        setTimeout(() => {
-          this.router.navigate([this.returnUrl]);
-        }, 500);
-      },
-      error: (error) => {
-        this.loading = false;
-
-        let errorMessage = 'Email ou mot de passe incorrect. Veuillez réessayer.';
-
-        if (error.error?.message) {
-          errorMessage = error.error.message;
-        } else if (error.error?.error) {
-          errorMessage = error.error.error;
+      this.authService.login(email, password).subscribe({
+        next: (response) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Connexion réussie',
+            detail: `Bienvenue ${response.user.prenom} ${response.user.nom}`,
+            life: 3000
+          });
+          setTimeout(() => this.router.navigate([this.returnUrl]), 500);
+        },
+        error: (error) => {
+          this.loading = false;
+          let msg = error.error?.message || error.error?.error || 
+            "Email ou mot de passe incorrect.";
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: msg,
+            life: 5000
+          });
         }
-
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Échec de connexion',
-          detail: errorMessage,
-          life: 5000
-        });
-      }
-    });
+      });
+    },
+    error: (err) => {
+      console.log("Erreur CSRF:", err);
+      this.loading = false;
+    }
   });
 }
+
 
 }
