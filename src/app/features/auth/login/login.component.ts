@@ -77,50 +77,52 @@ export class LoginComponent implements OnInit {
     return this.loginForm.controls;
   }
 
-onSubmit(): void {
-  if (this.loginForm.invalid) {
-    Object.keys(this.loginForm.controls).forEach(key =>
-      this.loginForm.get(key)?.markAsTouched()
-    );
-    return;
-  }
-
-  this.loading = true;
-
-  this.authService.getCsrfCookie().subscribe({
-    next: () => {
-      // Après récupération du cookie, faire le login
-      const { email, password } = this.loginForm.value;
-
-      this.authService.login(email, password).subscribe({
-        next: (response) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Connexion réussie',
-            detail: `Bienvenue ${response.user.prenom} ${response.user.nom}`,
-            life: 3000
-          });
-          setTimeout(() => this.router.navigate([this.returnUrl]), 500);
-        },
-        error: (error) => {
-          this.loading = false;
-          let msg = error.error?.message || error.error?.error || 
-            "Email ou mot de passe incorrect.";
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: msg,
-            life: 5000
-          });
-        }
+  onSubmit(): void {
+    if (this.loginForm.invalid) {
+      // Marquer tous les champs comme touchés pour afficher les erreurs
+      Object.keys(this.loginForm.controls).forEach(key => {
+        this.loginForm.get(key)?.markAsTouched();
       });
-    },
-    error: (err) => {
-      console.log("Erreur CSRF:", err);
-      this.loading = false;
+      return;
     }
-  });
-}
 
+    this.loading = true;
+    const { email, password } = this.loginForm.value;
 
+    this.authService.login(email, password).subscribe({
+      next: (response) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Connexion réussie',
+          detail: `Bienvenue ${response.user.prenom} ${response.user.nom}`,
+          life: 3000
+        });
+        
+        // Petit délai pour l'effet visuel
+        setTimeout(() => {
+          this.router.navigate([this.returnUrl]);
+        }, 500);
+      },
+      error: (error) => {
+        this.loading = false;
+
+        // Message d'erreur plus explicite
+        let errorMessage = 'Email ou mot de passe incorrect. Veuillez réessayer.';
+
+        // Si le backend renvoie un message spécifique, l'utiliser
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error?.error) {
+          errorMessage = error.error.error;
+        }
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Échec de connexion',
+          detail: errorMessage,
+          life: 5000
+        });
+      }
+    });
+  }
 }
