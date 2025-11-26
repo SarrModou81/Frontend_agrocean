@@ -7,7 +7,6 @@ import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-demande-detail',
-  templateUrl: './demande-detail.component.html',
   styleUrls: ['./demande-detail.component.scss']
 })
 export class DemandeDetailComponent implements OnInit {
