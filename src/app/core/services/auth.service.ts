@@ -48,20 +48,26 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, {
-      email,
-      password
-    }).pipe(
-      tap(response => {
-        if (response.token && response.user) {
-          localStorage.setItem(this.tokenKey, response.token);
-          localStorage.setItem(this.userKey, JSON.stringify(response.user));
-          this.currentUserSubject.next(response.user);
-        }
-      })
-    );
-  }
+   getCsrfCookie() {
+  return this.http.get(`${environment.apiUrl}/sanctum/csrf-cookie`, {
+    withCredentials: true
+  });
+}
+login(email: string, password: string): Observable<AuthResponse> {
+  return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, 
+    { email, password },
+    { withCredentials: true }  // ← IMPORTANT
+  ).pipe(
+    tap(response => {
+      if (response.token && response.user) {
+        localStorage.setItem(this.tokenKey, response.token);
+        localStorage.setItem(this.userKey, JSON.stringify(response.user));
+        this.currentUserSubject.next(response.user);
+      }
+    })
+  );
+}
+
 
   register(userData: any): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, userData);
@@ -122,4 +128,6 @@ export class AuthService {
   changePassword(passwordData: any): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/change-password`, passwordData);
   }
+ 
+
 }

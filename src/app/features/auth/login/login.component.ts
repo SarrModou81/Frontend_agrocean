@@ -77,18 +77,21 @@ export class LoginComponent implements OnInit {
     return this.loginForm.controls;
   }
 
-  onSubmit(): void {
-    if (this.loginForm.invalid) {
-      // Marquer tous les champs comme touchés pour afficher les erreurs
-      Object.keys(this.loginForm.controls).forEach(key => {
-        this.loginForm.get(key)?.markAsTouched();
-      });
-      return;
-    }
+ onSubmit(): void {
+  if (this.loginForm.invalid) {
+    Object.keys(this.loginForm.controls).forEach(key => {
+      this.loginForm.get(key)?.markAsTouched();
+    });
+    return;
+  }
 
-    this.loading = true;
-    const { email, password } = this.loginForm.value;
+  this.loading = true;
+  const { email, password } = this.loginForm.value;
 
+  // 1️⃣ Charger le cookie CSRF d'abord
+  this.authService.getCsrfCookie().subscribe(() => {
+
+    // 2️⃣ Ensuite faire le login
     this.authService.login(email, password).subscribe({
       next: (response) => {
         this.messageService.add({
@@ -97,8 +100,7 @@ export class LoginComponent implements OnInit {
           detail: `Bienvenue ${response.user.prenom} ${response.user.nom}`,
           life: 3000
         });
-        
-        // Petit délai pour l'effet visuel
+
         setTimeout(() => {
           this.router.navigate([this.returnUrl]);
         }, 500);
@@ -106,10 +108,8 @@ export class LoginComponent implements OnInit {
       error: (error) => {
         this.loading = false;
 
-        // Message d'erreur plus explicite
         let errorMessage = 'Email ou mot de passe incorrect. Veuillez réessayer.';
 
-        // Si le backend renvoie un message spécifique, l'utiliser
         if (error.error?.message) {
           errorMessage = error.error.message;
         } else if (error.error?.error) {
@@ -124,5 +124,7 @@ export class LoginComponent implements OnInit {
         });
       }
     });
-  }
+  });
+}
+
 }
