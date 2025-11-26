@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://backend-agrocean.onrender.com/api'
+  apiUrl: 'https://backendagrocean-production.up.railway.app/api'
 };
